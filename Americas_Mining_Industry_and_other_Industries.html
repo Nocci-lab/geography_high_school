@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アメリカの鉱工業とその他の工業 ゲーム</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#1f2937;--muted:#6b7280;--accent:#2563eb;--ok:#16a34a;--ng:#dc2626;--line:#e5e7eb;--warn:#b45309}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background:#f5f7fb;color:var(--ink);min-height:100vh}
+header{background:linear-gradient(135deg,#0f766e,#2563eb);color:white;text-align:center;padding:18px 16px 14px}
+h1{margin:0;font-size:clamp(22px,4vw,34px)}
+header p{margin:.5rem 0 0;font-size:15px;opacity:.95}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.panel{background:white;border-radius:18px;padding:14px;box-shadow:0 8px 24px rgba(15,23,42,.08);margin-bottom:16px}
+.hint{font-size:14px;color:#64748b;line-height:1.8;margin-top:8px}
+.quizBox{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+.question{font-size:clamp(20px,3.6vw,30px);font-weight:800;line-height:1.6;white-space:pre-line}
+.question .num{display:inline-grid;place-items:center;min-width:72px;height:64px;padding:0 14px;border-radius:999px;background:#fef3c7;color:var(--warn);border:3px solid #f59e0b;margin:0 6px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.chip{background:#eef2ff;color:#3730a3;border-radius:999px;padding:8px 12px;font-weight:700}
+.chip.warn{background:#fff7ed;color:#c2410c}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+button{border:none;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:16px;transition:.12s transform,.12s background}
+button:active{transform:scale(.98)}
+.primary{background:var(--accent);color:white}
+.secondary{background:#e5e7eb;color:#111827}
+.danger{background:#fee2e2;color:#991b1b}
+.reviewBtn{background:#fff7ed;color:#9a3412}
+button:disabled{opacity:.45;cursor:not-allowed}
+#message{min-height:48px;padding:12px 14px;border-radius:14px;font-size:18px;font-weight:800;background:#f1f5f9;margin-top:12px}
+#message.good{background:#dcfce7;color:#166534}
+#message.bad{background:#fee2e2;color:#991b1b}
+#message.info{background:#eff6ff;color:#1d4ed8}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:12px}
+.choice{background:#f8fafc;border:2px solid #e5e7eb;color:#111827;min-height:46px}
+.choice:hover{background:#eff6ff;border-color:#93c5fd}
+.choice.correct{background:#dcfce7;border-color:#22c55e;color:#166534}
+.choice.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b}
+.detailsBox{display:none;margin-top:12px;padding:12px;border:1px dashed #cbd5e1;border-radius:14px;background:#fafafa}
+.listGrid{columns:2 260px;gap:24px}
+.listGrid div{break-inside:avoid;padding:4px 0;border-bottom:1px dotted #e5e7eb}
+.subTitle{font-weight:800;margin-bottom:8px}
+.modeTag{font-weight:800;color:#1d4ed8;margin-left:6px}
+#confettiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999}
+@media(max-width:700px){
+  .quizBox{grid-template-columns:1fr}
+  .stats{justify-content:flex-start}
+  .question .num{min-width:60px;height:54px}
+  .choices{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>アメリカの鉱工業とその他の工業 ゲーム</h1>
+  <p>画像なしで、鉱産資源・工業地域の変化・主要工業都市を復習します。</p>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="quizBox">
+      <div>
+        <div class="modeTag" id="modeLabel">まだ開始していません</div>
+        <div class="question" id="question">スタートボタンを押してください。</div>
+      </div>
+      <div class="stats">
+        <span class="chip" id="progressChip">進み具合：0 / 37</span>
+        <span class="chip" id="scoreChip">正解：0</span>
+        <span class="chip warn" id="wrongChip">間違い：0（復習 0問）</span>
+      </div>
+    </div>
+
+    <div id="choices" class="choices"></div>
+    <div id="message" class="info">順番にやるか、ランダムでやるかを選べます。</div>
+
+    <div class="controls">
+      <button class="primary" onclick="startQuiz('all','sequential')">順番にスタート</button>
+      <button class="primary" onclick="startQuiz('all','random')">ランダムにスタート</button>
+      <button class="reviewBtn" id="reviewSeqBtn" onclick="startQuiz('wrong','sequential')" disabled>間違えた問題だけ・順番</button>
+      <button class="reviewBtn" id="reviewRandBtn" onclick="startQuiz('wrong','random')" disabled>間違えた問題だけ・ランダム</button>
+      <button class="secondary" onclick="showAnswer()">答えを見る</button>
+      <button class="secondary" onclick="nextQuestion()">次へ</button>
+      <button class="secondary" onclick="shuffleCurrent()">今の問題をシャッフル</button>
+      <button class="secondary" onclick="toggleDetails()">答え一覧</button>
+      <button class="danger" onclick="resetAll()">記録リセット</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="subTitle">復習リスト</div>
+    <div id="reviewList"></div>
+  </section>
+
+  <section id="detailsBox" class="detailsBox">
+    <div class="subTitle">答え一覧</div>
+    <div class="listGrid" id="answerList"></div>
+  </section>
+</main>
+
+<canvas id="confettiCanvas"></canvas>
+
+<script>
+const DATA = [{"no":1,"answer":"フォードシステム","q":"【大量生産方式】\n自動車の大量生産方式で、流れ作業を取り入れた方式を何という？","note":"フォードシステム。大量生産方式の代表。"},{"no":2,"answer":"流れ作業","q":"【大量生産方式】\nフォードシステムで用いられた生産方法は？","note":"流れ作業。"},{"no":3,"answer":"ハイテク産業","q":"【産業の特色】\nアメリカで発展し、世界経済のグローバル化をリードした先端的な産業は？","note":"ハイテク産業。"},{"no":4,"answer":"メキシコ湾岸油田","q":"【鉱産資源】\nアメリカの代表的な石油産地の1つは？","note":"石油はメキシコ湾岸油田など。"},{"no":5,"answer":"アパラチア炭田","q":"【鉱産資源】\nアメリカの代表的な石炭産地の1つは？","note":"石炭はアパラチア炭田など。"},{"no":6,"answer":"メサビ鉄山","q":"【鉱産資源】\nアメリカの代表的な鉄鉱石産地の1つは？","note":"鉄鉱石はメサビ鉄山など。"},{"no":7,"answer":"ラストベルト","q":"【工業地域の変化】\n北東部の古い工業地域は、衰退を表す言葉で何ベルトとよばれる？","note":"ラストベルト。"},{"no":8,"answer":"スノーベルト","q":"【工業地域の変化】\n北東部の古い工業地域は、寒冷な気候から何ベルトともよばれる？","note":"スノーベルト。"},{"no":9,"answer":"フロストベルト","q":"【工業地域の変化】\n北東部の古い工業地域は、霜の多い地域という意味で何ベルトともよばれる？","note":"フロストベルト。"},{"no":10,"answer":"サンベルト","q":"【工業地域の変化】\n1970年代以降に発達した、アメリカ南部の新しい工業地域は？","note":"サンベルト。"},{"no":11,"answer":"北緯37度","q":"【サンベルト】\nサンベルトは、およそ何度より南の地域に形成された工業地域？","note":"北緯37度より南側。"},{"no":12,"answer":"シリコンバレー","q":"【工業地域・都市】\nカリフォルニア州で、コンピュータやIT産業が集積する地域は？","note":"シリコンバレー。中心はサンノゼ近郊。"},{"no":13,"answer":"サンノゼ","q":"【シリコンバレー】\nシリコンバレーの中心都市は？","note":"サンノゼ近郊。"},{"no":14,"answer":"シリコンデザート","q":"【工業地域・都市】\nアリゾナ州の砂漠地帯に形成されたハイテク工業地域は？","note":"シリコンデザート。"},{"no":15,"answer":"フェニックス","q":"【シリコンデザート】\nシリコンデザートの中心都市は？","note":"フェニックス。"},{"no":16,"answer":"シリコンプレーン","q":"【工業地域・都市】\nテキサス州の平原地帯に形成されたハイテク工業地域は？","note":"シリコンプレーン。"},{"no":17,"answer":"ヒューストン","q":"【シリコンプレーン】\nシリコンプレーンの中心都市で、宇宙・航空機産業でも知られる都市は？","note":"ヒューストン。"},{"no":18,"answer":"シリコンフォレスト","q":"【工業地域・都市】\nアメリカ北西部で、航空機産業とも関係の深い工業地域は？","note":"シリコンフォレスト。教材では中心都市をシアトルとして扱う。"},{"no":19,"answer":"シアトル","q":"【シリコンフォレスト】\nシリコンフォレストの中心都市は？","note":"シアトル。航空機産業でも知られる。"},{"no":20,"answer":"エレクトロニクスハイウェイ","q":"【工業地域・都市】\nボストンを中心とするハイテク工業地域は？","note":"エレクトロニクスハイウェイ。"},{"no":21,"answer":"ボストン","q":"【エレクトロニクスハイウェイ】\nエレクトロニクスハイウェイの中心都市は？","note":"ボストン。"},{"no":22,"answer":"エレクトロニクスベルト","q":"【工業地域・都市】\nフロリダ半島に形成されたハイテク工業地域は？","note":"エレクトロニクスベルト。"},{"no":23,"answer":"フロリダ半島","q":"【エレクトロニクスベルト】\nエレクトロニクスベルトが形成されている半島は？","note":"フロリダ半島。"},{"no":24,"answer":"シリコンアレー","q":"【工業地域・都市】\nニューヨーク都心部のIT関連地域は？","note":"シリコンアレー。"},{"no":25,"answer":"ニューヨーク","q":"【シリコンアレー】\nシリコンアレーがある都市は？","note":"ニューヨーク。"},{"no":26,"answer":"リサーチトライアングル","q":"【工業地域・都市】\nノースカロライナ州の研究開発型工業地域は？","note":"リサーチトライアングル。"},{"no":27,"answer":"ノースカロライナ州","q":"【リサーチトライアングル】\nリサーチトライアングルがある州は？","note":"ノースカロライナ州。"},{"no":28,"answer":"綿工業","q":"【工業の発展】\n19世紀、ボストンなどで発達した工業は？","note":"綿工業。"},{"no":29,"answer":"鉄鋼業","q":"【工業の発展】\n19世紀、ピッツバーグなどで発達した工業は？","note":"鉄鋼業。"},{"no":30,"answer":"自動車工業","q":"【工業の発展】\n20世紀初頭、デトロイトなどで発達した工業は？","note":"自動車工業。"},{"no":31,"answer":"石油化学工業","q":"【工業の発展】\nニューオーリンズやロサンゼルスなどで発達した工業は？","note":"石油化学工業。"},{"no":32,"answer":"航空機産業","q":"【第二次世界大戦後】\n第二次世界大戦後に発展した、シアトルやロサンゼルスとも関係の深い産業は？","note":"航空機産業。"},{"no":33,"answer":"宇宙産業","q":"【第二次世界大戦後】\nヒューストンなどとも関係が深い、第二次世界大戦後に発展した産業は？","note":"宇宙産業。"},{"no":34,"answer":"ピッツバーグ","q":"【その他の工業都市】\nかつて鉄鋼業で栄えた都市は？","note":"ピッツバーグ。"},{"no":35,"answer":"デトロイト","q":"【その他の工業都市】\nかつて自動車工業で栄えた都市は？","note":"デトロイト。"},{"no":36,"answer":"シカゴ","q":"【その他の工業都市】\n鉄鋼・農業機械・食品工業で知られる都市は？","note":"シカゴ。"},{"no":37,"answer":"ロサンゼルス","q":"【その他の工業都市】\n石油化学工業や航空機産業で知られる都市は？","note":"ロサンゼルス。"}];
+const ALL_ANSWERS = [...new Set(DATA.map(x => x.answer))];
+let queue = [];
+let idx = 0;
+let score = 0;
+let wrongThisRound = 0;
+let answered = false;
+let currentMode = 'all';
+let currentOrder = 'sequential';
+let wrongNos = JSON.parse(localStorage.getItem('AmericasMiningIndustryWrongNos') || '[]');
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz(mode='all', order='sequential') {
+  currentMode = mode;
+  currentOrder = order;
+  const base = mode === 'wrong' ? DATA.filter(x => wrongNos.includes(x.no)) : DATA;
+  if (base.length === 0) {
+    alert('復習する問題はまだありません。');
+    return;
+  }
+  queue = order === 'random' ? shuffle(base) : [...base];
+  idx = 0;
+  score = 0;
+  wrongThisRound = 0;
+  answered = false;
+  document.getElementById('modeLabel').textContent =
+    (mode === 'wrong' ? '復習モード' : '全問モード') + ' / ' + (order === 'random' ? 'ランダム' : '順番');
+  renderQuestion();
+  updateStats();
+  renderReview();
+}
+
+function shuffleCurrent() {
+  if (queue.length === 0) {
+    startQuiz('all','random');
+    return;
+  }
+  queue = shuffle(queue);
+  idx = 0;
+  score = 0;
+  wrongThisRound = 0;
+  answered = false;
+  document.getElementById('modeLabel').textContent =
+    (currentMode === 'wrong' ? '復習モード' : '全問モード') + ' / シャッフル';
+  renderQuestion();
+  updateStats();
+}
+
+function makeChoices(ans) {
+  const others = shuffle(ALL_ANSWERS.filter(a => a !== ans)).slice(0, 5);
+  return shuffle([ans, ...others]);
+}
+
+function renderQuestion() {
+  const item = queue[idx];
+  if (!item) {
+    finishQuiz();
+    return;
+  }
+  answered = false;
+  document.getElementById('question').innerHTML =
+    'No.<span class="num">' + item.no + '</span> ' + item.q.replace(/\n/g, '<br>');
+  const msg = document.getElementById('message');
+  msg.textContent = '答えを選んでください。';
+  msg.className = 'info';
+
+  const choices = document.getElementById('choices');
+  choices.innerHTML = '';
+  makeChoices(item.answer).forEach(choice => {
+    const b = document.createElement('button');
+    b.className = 'choice';
+    b.textContent = choice;
+    b.onclick = () => checkAnswer(b, choice);
+    choices.appendChild(b);
+  });
+  updateStats();
+}
+
+function saveWrongNos() {
+  localStorage.setItem('AmericasMiningIndustryWrongNos', JSON.stringify(wrongNos));
+}
+
+function checkAnswer(btn, choice) {
+  if (answered) return;
+  answered = true;
+  const item = queue[idx];
+  document.querySelectorAll('.choice').forEach(b => {
+    if (b.textContent === item.answer) b.classList.add('correct');
+    b.disabled = true;
+  });
+  const msg = document.getElementById('message');
+
+  if (choice === item.answer) {
+    score++;
+    msg.textContent = '正解！ ' + item.answer + ' / ' + item.note;
+    msg.className = 'good';
+    wrongNos = wrongNos.filter(n => n !== item.no);
+  } else {
+    wrongThisRound++;
+    btn.classList.add('wrong');
+    msg.textContent = '残念。正解は「' + item.answer + '」です。 ' + item.note;
+    msg.className = 'bad';
+    if (!wrongNos.includes(item.no)) wrongNos.push(item.no);
+  }
+  saveWrongNos();
+  updateStats();
+  renderReview();
+}
+
+function showAnswer() {
+  if (queue.length === 0) return;
+  answered = true;
+  const item = queue[idx];
+  document.querySelectorAll('.choice').forEach(b => {
+    if (b.textContent === item.answer) b.classList.add('correct');
+    b.disabled = true;
+  });
+  const msg = document.getElementById('message');
+  msg.textContent = '答え：' + item.answer + ' / ' + item.note;
+  msg.className = 'info';
+}
+
+function nextQuestion() {
+  if (queue.length === 0) {
+    startQuiz('all','sequential');
+    return;
+  }
+  idx++;
+  if (idx >= queue.length) finishQuiz();
+  else renderQuestion();
+}
+
+function finishQuiz() {
+  document.getElementById('question').textContent = '終了！';
+  document.getElementById('choices').innerHTML = '';
+  let text = 'おつかれさま！ 正解 ' + score + ' / ' + queue.length + ' 問でした。';
+  if (wrongNos.length === 0) {
+    text += ' 復習リストは空です。';
+    celebrate();
+  } else {
+    text += ' 間違えた問題だけで復習できます。';
+  }
+  const msg = document.getElementById('message');
+  msg.textContent = text;
+  msg.className = wrongNos.length === 0 ? 'good' : 'info';
+  updateStats();
+  renderReview();
+}
+
+function updateStats() {
+  const total = queue.length || DATA.length;
+  const now = queue.length ? Math.min(idx + 1, total) : 0;
+  document.getElementById('progressChip').textContent = '進み具合：' + now + ' / ' + total;
+  document.getElementById('scoreChip').textContent = '正解：' + score;
+  document.getElementById('wrongChip').textContent = '間違い：' + wrongThisRound + '（復習 ' + wrongNos.length + '問）';
+  document.getElementById('reviewSeqBtn').disabled = wrongNos.length === 0;
+  document.getElementById('reviewRandBtn').disabled = wrongNos.length === 0;
+}
+
+function renderReview() {
+  const box = document.getElementById('reviewList');
+  if (wrongNos.length === 0) {
+    box.innerHTML = '<span class="hint">復習リストは空です。</span>';
+    return;
+  }
+  box.innerHTML = wrongNos.sort((a,b)=>a-b).map(no => {
+    const item = DATA.find(x => x.no === no);
+    return '<div><b>No.' + item.no + '</b> ' + item.answer + ' <span class="hint">' + item.note + '</span></div>';
+  }).join('');
+}
+
+function toggleDetails() {
+  const el = document.getElementById('detailsBox');
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+function resetAll() {
+  if (!confirm('復習記録と今の点数をリセットしますか？')) return;
+  wrongNos = [];
+  localStorage.removeItem('AmericasMiningIndustryWrongNos');
+  queue = [];
+  idx = 0;
+  score = 0;
+  wrongThisRound = 0;
+  answered = false;
+  document.getElementById('modeLabel').textContent = 'まだ開始していません';
+  document.getElementById('question').textContent = 'スタートボタンを押してください。';
+  document.getElementById('choices').innerHTML = '';
+  const msg = document.getElementById('message');
+  msg.textContent = '順番にやるか、ランダムでやるかを選べます。';
+  msg.className = 'info';
+  updateStats();
+  renderReview();
+}
+
+function buildList() {
+  document.getElementById('answerList').innerHTML = DATA.map(item =>
+    '<div><b>No.' + item.no + '</b> ' + item.answer + ' <span class="hint">' + item.note + '</span></div>'
+  ).join('');
+}
+
+function celebrate() {
+  const canvas = document.getElementById('confettiCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const colors = ['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899','#facc15'];
+  const pieces = Array.from({length: 220}, () => ({
+    x: Math.random() * w,
+    y: -20 - Math.random() * h * 0.3,
+    r: 4 + Math.random() * 8,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    vx: -2 + Math.random() * 4,
+    vy: 2 + Math.random() * 4,
+    rot: Math.random() * Math.PI,
+    vr: -0.2 + Math.random() * 0.4
+  }));
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    pieces.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r * 0.7);
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 180) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, w, h);
+  }
+  draw();
+}
+
+buildList();
+updateStats();
+renderReview();
+</script>
+</body>
+</html>

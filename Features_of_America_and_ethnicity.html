@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アメリカ合衆国の特徴と民族 ゲーム</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#1f2937;--muted:#6b7280;--accent:#2563eb;--ok:#16a34a;--ng:#dc2626;--line:#e5e7eb;--warn:#b45309}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background:#f5f7fb;color:var(--ink);min-height:100vh}
+header{background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:white;text-align:center;padding:18px 16px 14px}
+h1{margin:0;font-size:clamp(22px,4vw,34px)} header p{margin:.5rem 0 0;font-size:15px;opacity:.95}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.panel{background:white;border-radius:18px;padding:14px;box-shadow:0 8px 24px rgba(15,23,42,.08);margin-bottom:16px}
+.hint{font-size:14px;color:#64748b;line-height:1.8;margin-top:8px}
+.quizBox{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+.question{font-size:clamp(20px,3.6vw,30px);font-weight:800;line-height:1.6;white-space:pre-line}
+.question .num{display:inline-grid;place-items:center;min-width:72px;height:64px;padding:0 14px;border-radius:999px;background:#fef3c7;color:var(--warn);border:3px solid #f59e0b;margin:0 6px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.chip{background:#eef2ff;color:#3730a3;border-radius:999px;padding:8px 12px;font-weight:700} .chip.warn{background:#fff7ed;color:#c2410c}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+button{border:none;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:16px;transition:.12s transform,.12s background}
+button:active{transform:scale(.98)} .primary{background:var(--accent);color:white} .secondary{background:#e5e7eb;color:#111827} .danger{background:#fee2e2;color:#991b1b} .reviewBtn{background:#fff7ed;color:#9a3412} button:disabled{opacity:.45;cursor:not-allowed}
+#message{min-height:48px;padding:12px 14px;border-radius:14px;font-size:18px;font-weight:800;background:#f1f5f9;margin-top:12px}
+#message.good{background:#dcfce7;color:#166534} #message.bad{background:#fee2e2;color:#991b1b} #message.info{background:#eff6ff;color:#1d4ed8}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:12px}
+.choice{background:#f8fafc;border:2px solid #e5e7eb;color:#111827;min-height:46px}
+.choice:hover{background:#eff6ff;border-color:#93c5fd} .choice.correct{background:#dcfce7;border-color:#22c55e;color:#166534} .choice.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b}
+.detailsBox{display:none;margin-top:12px;padding:12px;border:1px dashed #cbd5e1;border-radius:14px;background:#fafafa}
+.listGrid{columns:2 260px;gap:24px} .listGrid div{break-inside:avoid;padding:4px 0;border-bottom:1px dotted #e5e7eb}
+.subTitle{font-weight:800;margin-bottom:8px} .modeTag{font-weight:800;color:#1d4ed8;margin-left:6px}
+#confettiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999}
+@media(max-width:700px){.quizBox{grid-template-columns:1fr}.stats{justify-content:flex-start}.question .num{min-width:60px;height:54px}.choices{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}}
+</style>
+</head>
+<body>
+<header>
+  <h1>アメリカ合衆国の特徴と民族 ゲーム</h1>
+  <p>画像なしで、アメリカの特徴・気候・多民族社会・民族分布を復習します。</p>
+</header>
+<main>
+  <section class="panel">
+    <div class="quizBox">
+      <div>
+        <div class="modeTag" id="modeLabel">まだ開始していません</div>
+        <div class="question" id="question">スタートボタンを押してください。</div>
+      </div>
+      <div class="stats">
+        <span class="chip" id="progressChip">進み具合：0 / 30</span>
+        <span class="chip" id="scoreChip">正解：0</span>
+        <span class="chip warn" id="wrongChip">間違い：0（復習 0問）</span>
+      </div>
+    </div>
+
+    <div id="choices" class="choices"></div>
+    <div id="message" class="info">順番にやるか、ランダムでやるかを選べます。</div>
+
+    <div class="controls">
+      <button class="primary" onclick="startQuiz('all','sequential')">順番にスタート</button>
+      <button class="primary" onclick="startQuiz('all','random')">ランダムにスタート</button>
+      <button class="reviewBtn" id="reviewSeqBtn" onclick="startQuiz('wrong','sequential')" disabled>間違えた問題だけ・順番</button>
+      <button class="reviewBtn" id="reviewRandBtn" onclick="startQuiz('wrong','random')" disabled>間違えた問題だけ・ランダム</button>
+      <button class="secondary" onclick="showAnswer()">答えを見る</button>
+      <button class="secondary" onclick="nextQuestion()">次へ</button>
+      <button class="secondary" onclick="shuffleCurrent()">今の問題をシャッフル</button>
+      <button class="secondary" onclick="toggleDetails()">答え一覧</button>
+      <button class="danger" onclick="resetAll()">記録リセット</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="subTitle">復習リスト</div>
+    <div id="reviewList"></div>
+  </section>
+
+  <section id="detailsBox" class="detailsBox">
+    <div class="subTitle">答え一覧</div>
+    <div class="listGrid" id="answerList"></div>
+  </section>
+</main>
+<canvas id="confettiCanvas" class="hidden"></canvas>
+<script>
+const DATA = [{"no":1,"answer":"世界の警察官","q":"【アメリカ合衆国】\nアメリカは世界への影響力が大きく、世界各地の紛争に介入することから、何と呼ばれる？","note":"アメリカは「世界の警察官」と呼ばれることがある。"},{"no":2,"answer":"ワシントンD.C.","q":"【アメリカ合衆国】\nアメリカ合衆国の首都は？","note":"政治の中心。ホワイトハウスや連邦議会などがある。"},{"no":3,"answer":"ニューヨーク","q":"【アメリカ合衆国】\nアメリカ合衆国の最大都市は？","note":"経済の中心。世界の金融の中心地でもある。"},{"no":4,"answer":"経済","q":"【ニューヨーク】\nニューヨークはアメリカの何の中心地？","note":"経済の中心地。"},{"no":5,"answer":"国際連合本部","q":"【ニューヨーク】\nニューヨークに置かれている国際機関の本部は？","note":"国際連合本部がニューヨークにある。"},{"no":6,"answer":"ウォール街","q":"【ニューヨーク】\n世界最大規模のニューヨーク証券取引所がある金融街は？","note":"ウォール街。"},{"no":7,"answer":"英語","q":"【アメリカ合衆国】\nアメリカ合衆国で主に使われる言語は？","note":"公用語としては英語を答える形。"},{"no":8,"answer":"ドル","q":"【アメリカ合衆国】\nアメリカ合衆国の通貨は？","note":"ドルは国際通貨、世界の基軸通貨。"},{"no":9,"answer":"西経100度","q":"【気候】\nアメリカ合衆国では、西経（　）度を境に、東側は湿潤、西側は乾燥する。","note":"西経100度が重要な境目。"},{"no":10,"answer":"湿潤","q":"【気候】\n西経100度を境に、東側はどんな気候？","note":"東側は湿潤。"},{"no":11,"answer":"乾燥","q":"【気候】\n西経100度を境に、西側はどんな気候？","note":"西側は乾燥。"},{"no":12,"answer":"サラダボウル","q":"【多民族社会】\nアメリカは多様な人種・民族が互いの文化を尊重しながら共生をめざすため、「人種の（　）」と呼ばれる。","note":"人種のサラダボウル。"},{"no":13,"answer":"多文化主義","q":"【多民族社会】\n多様な文化を尊重し、共生をめざす考え方・政策を何という？","note":"多文化主義。"},{"no":14,"answer":"ネイティブアメリカン","q":"【先住民】\nヨーロッパ人が来る前からアメリカに暮らしていた先住民は？","note":"ネイティブアメリカン。"},{"no":15,"answer":"アメリカンドリーム","q":"【社会】\n物質的な豊かさや社会的成功を求める考え方を何という？","note":"アメリカンドリーム。"},{"no":16,"answer":"モータリゼーション","q":"【生活様式】\n自動車中心の生活様式を何という？","note":"モータリゼーション。"},{"no":17,"answer":"クレジットカード","q":"【生活様式】\nアメリカ文化が世界中に広まった例。支払いに使うカードは？","note":"クレジットカード。"},{"no":18,"answer":"ファストフード","q":"【生活様式】\nアメリカ文化が世界中に広まった例。手軽に食べられる食事の形は？","note":"ファストフード。"},{"no":19,"answer":"ネイティブアメリカン","q":"【民族分布】\nインディアン、イヌイット、ポリネシア系などを含む先住民は？","note":"ネイティブアメリカン。"},{"no":20,"answer":"イヌイット","q":"【民族分布】\nカナダ北部などに分布する先住民は？","note":"イヌイット。"},{"no":21,"answer":"ポリネシア系","q":"【民族分布】\nハワイ州などに分布する先住民系の人々は？","note":"ポリネシア系。"},{"no":22,"answer":"WASP","q":"【民族分布】\n白人・アングロサクソン・プロテスタント系の人々を略して何という？","note":"WASP = White Anglo-Saxon Protestant。"},{"no":23,"answer":"政治・経済・文化","q":"【WASP】\nWASPはアメリカの何の発展に大きな役割を果たした？","note":"政治・経済・文化の発展に大きな役割。"},{"no":24,"answer":"アフリカ系","q":"【民族分布】\nアメリカ南東部に多く、アフリカから奴隷として連れてこられた人々を祖先にもつ人々は？","note":"アフリカ系。綿花地帯に重なる地域に分布。"},{"no":25,"answer":"綿花地帯","q":"【アフリカ系】\nアフリカ系の人々が多く分布する地域は、どの農業地帯と重なる？","note":"綿花地帯。"},{"no":26,"answer":"ヒスパニック","q":"【民族分布】\nアメリカ南西部に多く、スペイン語を話す人々は？","note":"ヒスパニック。中・南アメリカからの移民など。"},{"no":27,"answer":"スペイン語","q":"【ヒスパニック】\nヒスパニックが主に話す言語は？","note":"スペイン語。"},{"no":28,"answer":"中・南アメリカ","q":"【ヒスパニック】\nヒスパニックは、どの地域からの移民が多い？","note":"中・南アメリカからの移民。"},{"no":29,"answer":"アジア系","q":"【民族分布】\n西海岸の太平洋岸や大都市に多く、中国・韓国・フィリピン・インドなどからの移民を含む人々は？","note":"アジア系。"},{"no":30,"answer":"西海岸","q":"【アジア系】\nアジア系の人々は、アメリカのどの地域に多い？","note":"西海岸の太平洋岸や大都市に多い。"}];
+const ALL_ANSWERS=DATA.map(x=>x.answer);
+let queue=[],idx=0,score=0,wrongThisRound=0,answered=false,currentMode='all',currentOrder='sequential';
+let wrongNos=JSON.parse(localStorage.getItem('FeaturesNorthAmericaEthnicityWrongNos')||'[]');
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function startQuiz(mode='all',order='sequential'){currentMode=mode;currentOrder=order;const base=mode==='wrong'?DATA.filter(x=>wrongNos.includes(x.no)):DATA;if(base.length===0){alert('復習する問題はまだありません。');return;}queue=order==='random'?shuffle(base):[...base];idx=0;score=0;wrongThisRound=0;answered=false;document.getElementById('modeLabel').textContent=(mode==='wrong'?'復習モード':'全問モード')+' / '+(order==='random'?'ランダム':'順番');renderQuestion();updateStats();renderReview();}
+function shuffleCurrent(){if(queue.length===0){startQuiz('all','random');return;}queue=shuffle(queue);idx=0;score=0;wrongThisRound=0;answered=false;document.getElementById('modeLabel').textContent=(currentMode==='wrong'?'復習モード':'全問モード')+' / シャッフル';renderQuestion();updateStats();}
+function makeChoices(ans){return shuffle([ans,...shuffle(ALL_ANSWERS.filter(a=>a!==ans)).slice(0,5)]);}
+function renderQuestion(){const item=queue[idx];if(!item){finishQuiz();return;}answered=false;document.getElementById('question').innerHTML='No.<span class="num">'+item.no+'</span> '+item.q.replace(/\n/g,'<br>');document.getElementById('message').textContent='答えを選んでください。';document.getElementById('message').className='';const choices=document.getElementById('choices');choices.innerHTML='';makeChoices(item.answer).forEach(choice=>{const b=document.createElement('button');b.className='choice';b.textContent=choice;b.onclick=()=>checkAnswer(b,choice);choices.appendChild(b);});updateStats();}
+function checkAnswer(btn,choice){if(answered)return;answered=true;const item=queue[idx];document.querySelectorAll('.choice').forEach(b=>{if(b.textContent===item.answer)b.classList.add('correct');b.disabled=true;});const msg=document.getElementById('message');if(choice===item.answer){score++;msg.textContent='正解！ '+item.answer+' / '+item.note;msg.className='good';wrongNos=wrongNos.filter(n=>n!==item.no);}else{wrongThisRound++;btn.classList.add('wrong');msg.textContent='残念。正解は「'+item.answer+'」です。 '+item.note;msg.className='bad';if(!wrongNos.includes(item.no))wrongNos.push(item.no);}localStorage.setItem('FeaturesNorthAmericaEthnicityWrongNos',JSON.stringify(wrongNos));updateStats();renderReview();}
+function showAnswer(){if(queue.length===0)return;answered=true;const item=queue[idx];document.querySelectorAll('.choice').forEach(b=>{if(b.textContent===item.answer)b.classList.add('correct');b.disabled=true;});const msg=document.getElementById('message');msg.textContent='答え：'+item.answer+' / '+item.note;msg.className='info';}
+function nextQuestion(){if(queue.length===0){startQuiz('all','sequential');return;}idx++;if(idx>=queue.length)finishQuiz();else renderQuestion();}
+function finishQuiz(){document.getElementById('question').textContent='終了！';document.getElementById('choices').innerHTML='';let text='おつかれさま！ 正解 '+score+' / '+queue.length+' 問でした。';if(wrongNos.length===0){text+=' 復習リストは空です。';celebrate();}else{text+=' 間違えた問題だけで復習できます。';}document.getElementById('message').textContent=text;document.getElementById('message').className=wrongNos.length===0?'good':'info';updateStats();renderReview();}
+function updateStats(){const total=queue.length||DATA.length;const now=queue.length?Math.min(idx+1,total):0;document.getElementById('progressChip').textContent='進み具合：'+now+' / '+total;document.getElementById('scoreChip').textContent='正解：'+score;document.getElementById('wrongChip').textContent='間違い：'+wrongThisRound+'（復習 '+wrongNos.length+'問）';document.getElementById('reviewSeqBtn').disabled=wrongNos.length===0;document.getElementById('reviewRandBtn').disabled=wrongNos.length===0;}
+function renderReview(){const box=document.getElementById('reviewList');if(wrongNos.length===0){box.innerHTML='<span class="hint">復習リストは空です。</span>';return;}box.innerHTML=wrongNos.sort((a,b)=>a-b).map(no=>{const item=DATA.find(x=>x.no===no);return '<div><b>No.'+item.no+'</b> '+item.answer+' <span class="hint"> '+item.note+'</span></div>';}).join('');}
+function toggleDetails(){const el=document.getElementById('detailsBox');el.style.display=el.style.display==='block'?'none':'block';}
+function resetAll(){if(!confirm('復習記録と今の点数をリセットしますか？'))return;wrongNos=[];localStorage.removeItem('FeaturesNorthAmericaEthnicityWrongNos');queue=[];idx=0;score=0;wrongThisRound=0;answered=false;document.getElementById('modeLabel').textContent='まだ開始していません';document.getElementById('question').textContent='スタートボタンを押してください。';document.getElementById('choices').innerHTML='';document.getElementById('message').textContent='順番にやるか、ランダムでやるかを選べます。';document.getElementById('message').className='info';updateStats();renderReview();}
+function buildList(){document.getElementById('answerList').innerHTML=DATA.map(item=>'<div><b>No.'+item.no+'</b> '+item.answer+' <span class="hint"> '+item.note+'</span></div>').join('');}
+function celebrate(){const canvas=document.getElementById('confettiCanvas'),ctx=canvas.getContext('2d');canvas.classList.remove('hidden');const dpr=window.devicePixelRatio||1,w=window.innerWidth,h=window.innerHeight;canvas.width=w*dpr;canvas.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);const colors=['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899','#facc15'];const pieces=Array.from({length:220},()=>({x:Math.random()*w,y:-20-Math.random()*h*.3,r:4+Math.random()*8,color:colors[Math.floor(Math.random()*colors.length)],tilt:Math.random()*Math.PI*2,tiltSpeed:.05+Math.random()*.12,vx:-2+Math.random()*4,vy:2+Math.random()*5,rot:Math.random()*Math.PI*2,vr:-.2+Math.random()*.4}));let frame=0;function draw(){ctx.clearRect(0,0,w,h);pieces.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.02;p.tilt+=p.tiltSpeed;p.rot+=p.vr;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.color;ctx.fillRect(-p.r/2,-p.r/2+Math.sin(p.tilt)*2,p.r,p.r*.6);ctx.restore();});frame++;if(frame<320)requestAnimationFrame(draw);else{ctx.clearRect(0,0,w,h);canvas.classList.add('hidden');}}draw();}
+buildList();updateStats();renderReview();
+</script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アメリカの農業 ゲーム</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#1f2937;--muted:#6b7280;--accent:#16a34a;--ok:#16a34a;--ng:#dc2626;--line:#e5e7eb;--warn:#b45309}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background:#f5f7fb;color:var(--ink);min-height:100vh}
+header{background:linear-gradient(135deg,#15803d,#84cc16);color:white;text-align:center;padding:18px 16px 14px}
+h1{margin:0;font-size:clamp(22px,4vw,34px)} header p{margin:.5rem 0 0;font-size:15px;opacity:.95}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.panel{background:white;border-radius:18px;padding:14px;box-shadow:0 8px 24px rgba(15,23,42,.08);margin-bottom:16px}
+.hint{font-size:14px;color:#64748b;line-height:1.8;margin-top:8px}
+.quizBox{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+.question{font-size:clamp(20px,3.6vw,30px);font-weight:800;line-height:1.6;white-space:pre-line}
+.question .num{display:inline-grid;place-items:center;min-width:72px;height:64px;padding:0 14px;border-radius:999px;background:#fef3c7;color:var(--warn);border:3px solid #f59e0b;margin:0 6px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.chip{background:#ecfdf5;color:#166534;border-radius:999px;padding:8px 12px;font-weight:700} .chip.warn{background:#fff7ed;color:#c2410c}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+button{border:none;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:16px;transition:.12s transform,.12s background}
+button:active{transform:scale(.98)} .primary{background:var(--accent);color:white} .secondary{background:#e5e7eb;color:#111827} .danger{background:#fee2e2;color:#991b1b} .reviewBtn{background:#fff7ed;color:#9a3412} button:disabled{opacity:.45;cursor:not-allowed}
+#message{min-height:48px;padding:12px 14px;border-radius:14px;font-size:18px;font-weight:800;background:#f1f5f9;margin-top:12px}
+#message.good{background:#dcfce7;color:#166534} #message.bad{background:#fee2e2;color:#991b1b} #message.info{background:#eff6ff;color:#1d4ed8}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:12px}
+.choice{background:#f8fafc;border:2px solid #e5e7eb;color:#111827;min-height:46px}
+.choice:hover{background:#eff6ff;border-color:#93c5fd} .choice.correct{background:#dcfce7;border-color:#22c55e;color:#166534} .choice.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b}
+.detailsBox{display:none;margin-top:12px;padding:12px;border:1px dashed #cbd5e1;border-radius:14px;background:#fafafa}
+.listGrid{columns:2 260px;gap:24px} .listGrid div{break-inside:avoid;padding:4px 0;border-bottom:1px dotted #e5e7eb}
+.subTitle{font-weight:800;margin-bottom:8px} .modeTag{font-weight:800;color:#166534;margin-left:6px}
+#confettiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999}
+@media(max-width:700px){.quizBox{grid-template-columns:1fr}.stats{justify-content:flex-start}.question .num{min-width:60px;height:54px}.choices{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}}
+</style>
+</head>
+<body>
+<header>
+  <h1>アメリカの農業 ゲーム</h1>
+  <p>画像なしで、適地適作・農業地帯・農業設備・農業地域を復習します。</p>
+</header>
+<main>
+  <section class="panel">
+    <div class="quizBox">
+      <div>
+        <div class="modeTag" id="modeLabel">まだ開始していません</div>
+        <div class="question" id="question">スタートボタンを押してください。</div>
+      </div>
+      <div class="stats">
+        <span class="chip" id="progressChip">進み具合：0 / 32</span>
+        <span class="chip" id="scoreChip">正解：0</span>
+        <span class="chip warn" id="wrongChip">間違い：0（復習 0問）</span>
+      </div>
+    </div>
+
+    <div id="choices" class="choices"></div>
+    <div id="message" class="info">順番にやるか、ランダムでやるかを選べます。</div>
+
+    <div class="controls">
+      <button class="primary" onclick="startQuiz('all','sequential')">順番にスタート</button>
+      <button class="primary" onclick="startQuiz('all','random')">ランダムにスタート</button>
+      <button class="reviewBtn" id="reviewSeqBtn" onclick="startQuiz('wrong','sequential')" disabled>間違えた問題だけ・順番</button>
+      <button class="reviewBtn" id="reviewRandBtn" onclick="startQuiz('wrong','random')" disabled>間違えた問題だけ・ランダム</button>
+      <button class="secondary" onclick="showAnswer()">答えを見る</button>
+      <button class="secondary" onclick="nextQuestion()">次へ</button>
+      <button class="secondary" onclick="shuffleCurrent()">今の問題をシャッフル</button>
+      <button class="secondary" onclick="toggleDetails()">答え一覧</button>
+      <button class="danger" onclick="resetAll()">記録リセット</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="subTitle">復習リスト</div>
+    <div id="reviewList"></div>
+  </section>
+
+  <section id="detailsBox" class="detailsBox">
+    <div class="subTitle">答え一覧</div>
+    <div class="listGrid" id="answerList"></div>
+  </section>
+</main>
+<canvas id="confettiCanvas" class="hidden"></canvas>
+<script>
+const DATA = [{"no":1,"answer":"適地適作","q":"【農業】\n各地域の環境（自然条件）に適した農産物を生産する農業の方法を何という？","note":"適地適作。地域ごとに気候・土壌に合った作物を作る。"},{"no":2,"answer":"500mm","q":"【農業地域】\n年降水量（　）mmの線は、農業地域を分ける大きな目安になる。","note":"年降水量500mmの線。西側は乾燥地域、東側は湿潤地域。"},{"no":3,"answer":"西経100度","q":"【農業地域】\n西側の乾燥地域と東側の湿潤地域は、おおむねどの経線を境に分けられる？","note":"西経100度付近。"},{"no":4,"answer":"小麦地帯","q":"【西側の乾燥地域】\n西側の乾燥地域では、主にどの農業地帯が広がる？","note":"小麦地帯。北部から南部へ、春小麦地帯・冬小麦地帯など。"},{"no":5,"answer":"太平洋岸","q":"【西側の乾燥地域】\n西側の乾燥地域で、園芸農業や小麦地帯が見られる沿岸は何岸？","note":"太平洋岸。"},{"no":6,"answer":"酪農","q":"【農業地域】\n五大湖周辺で、乳牛を飼育し、乳製品を生産する農業は？","note":"五大湖周辺は酪農地帯。"},{"no":7,"answer":"乳牛","q":"【酪農】\n五大湖周辺の酪農地帯では、主に何を飼育する？","note":"乳牛を飼育する。"},{"no":8,"answer":"乳製品","q":"【酪農】\n酪農地帯では、牛乳やチーズなどの何を生産する？","note":"乳製品を生産する。"},{"no":9,"answer":"園芸農業","q":"【農業地域】\n北部メガロポリス周辺で、新鮮な野菜・果実・花卉などを生産し、大都市圏へ出荷する農業は？","note":"園芸農業。大都市近郊でさかん。"},{"no":10,"answer":"大都市圏","q":"【園芸農業】\n園芸農業で生産された野菜・果実・花卉などは、主にどこへ出荷される？","note":"大都市圏へ出荷される。"},{"no":11,"answer":"小麦","q":"【農業地域】\nカナダとアメリカ合衆国の国境周辺では、何を大規模生産する地帯が広がる？","note":"小麦地帯。春小麦を大規模生産。"},{"no":12,"answer":"春小麦","q":"【小麦地帯】\nカナダとアメリカ合衆国の国境周辺では、春に種をまき、秋に収穫する何が多い？","note":"春小麦。"},{"no":13,"answer":"とうもろこし","q":"【農業地域】\n五大湖の南部に広がるコーンベルトでは、何の栽培が中心？","note":"とうもろこし地帯（コーンベルト）。"},{"no":14,"answer":"コーンベルト","q":"【農業地域】\n五大湖の南部に広がる、とうもろこし地帯を英語で何という？","note":"コーンベルト。"},{"no":15,"answer":"飼料作物","q":"【コーンベルト】\nとうもろこしなどは、牛・豚などの家畜のための何としても使われる？","note":"飼料作物。"},{"no":16,"answer":"牛・豚","q":"【コーンベルト】\nコーンベルトでは、とうもろこしなどの飼料作物とともに、どんな家畜を飼育する？","note":"牛・豚など。"},{"no":17,"answer":"小麦地帯","q":"【農業地域】\nコーンベルトの西南側に広がり、冬小麦を大規模生産する地帯は？","note":"小麦地帯。"},{"no":18,"answer":"冬小麦","q":"【小麦地帯】\n秋に種をまき、春に収穫する小麦は？","note":"冬小麦。"},{"no":19,"answer":"センターピボット","q":"【農業設備】\n小麦地帯やとうもろこし地帯などで活用される、360度回転する自動散水装置は？","note":"センターピボット。"},{"no":20,"answer":"綿花地帯","q":"【農業地域】\n南東部で、アフリカ系の人々が多い地域と関連が深い農業地帯は？","note":"綿花地帯（コットンベルト）。"},{"no":21,"answer":"アフリカ系","q":"【綿花地帯】\n南東部の綿花地帯では、歴史的にどの系統の人々が多い？","note":"アフリカ系の人々。"},{"no":22,"answer":"プランテーション農業","q":"【南東部】\nかつてアフリカ系の人々を労働力として発展した、大農園で行う農業は？","note":"プランテーション農業。"},{"no":23,"answer":"フロリダ半島","q":"【農業地域】\n熱帯・亜熱帯に近く、園芸農業がさかんな半島は？","note":"フロリダ半島。"},{"no":24,"answer":"園芸農業","q":"【フロリダ半島】\nフロリダ半島周辺でさかんな農業は？","note":"園芸農業。"},{"no":25,"answer":"グレートプレーンズ","q":"【農業地域】\nロッキー山脈〜グレートプレーンズ周辺で、牧牧・肉牛の飼育が見られる地域は？","note":"グレートプレーンズ周辺。"},{"no":26,"answer":"牧牧","q":"【グレートプレーンズ】\nグレートプレーンズ周辺では、肉牛などを育てるどんな農業が行われる？","note":"牧牧（放牧）。"},{"no":27,"answer":"フィードロット","q":"【農業設備】\n肥育施設で、肉牛にとうもろこしなどの飼料を与えて育てる施設は？","note":"フィードロット。"},{"no":28,"answer":"とうもろこし","q":"【フィードロット】\nフィードロットで肉牛に与える代表的な飼料は？","note":"とうもろこしなど。"},{"no":29,"answer":"地中海式農業","q":"【太平洋岸】\n太平洋岸の地中海性気候の地域で、オレンジ・グレープフルーツ・ブドウなどを栽培する農業は？","note":"地中海式農業。"},{"no":30,"answer":"オレンジ","q":"【地中海式農業】\n太平洋岸の地中海性気候の地域で栽培される果樹の例は？","note":"オレンジ、グレープフルーツ、ブドウなど。"},{"no":31,"answer":"ブドウ","q":"【地中海式農業】\n太平洋岸の地中海性気候の地域で栽培される果樹の例。ワインにも関係する果物は？","note":"ブドウ。"},{"no":32,"answer":"ヒスパニック","q":"【太平洋岸・農業】\n太平洋岸の地中海式農業では、どの人々の労働力が関係している？","note":"ヒスパニックの労働力。"}];
+const ALL_ANSWERS=DATA.map(x=>x.answer);
+let queue=[],idx=0,score=0,wrongThisRound=0,answered=false,currentMode='all',currentOrder='sequential';
+let wrongNos=JSON.parse(localStorage.getItem('AmericasAgricultureWrongNos')||'[]');
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function startQuiz(mode='all',order='sequential'){currentMode=mode;currentOrder=order;const base=mode==='wrong'?DATA.filter(x=>wrongNos.includes(x.no)):DATA;if(base.length===0){alert('復習する問題はまだありません。');return;}queue=order==='random'?shuffle(base):[...base];idx=0;score=0;wrongThisRound=0;answered=false;document.getElementById('modeLabel').textContent=(mode==='wrong'?'復習モード':'全問モード')+' / '+(order==='random'?'ランダム':'順番');renderQuestion();updateStats();renderReview();}
+function shuffleCurrent(){if(queue.length===0){startQuiz('all','random');return;}queue=shuffle(queue);idx=0;score=0;wrongThisRound=0;answered=false;document.getElementById('modeLabel').textContent=(currentMode==='wrong'?'復習モード':'全問モード')+' / シャッフル';renderQuestion();updateStats();}
+function makeChoices(ans){return shuffle([ans,...shuffle(ALL_ANSWERS.filter(a=>a!==ans)).slice(0,5)]);}
+function renderQuestion(){const item=queue[idx];if(!item){finishQuiz();return;}answered=false;document.getElementById('question').innerHTML='No.<span class="num">'+item.no+'</span> '+item.q.replace(/\n/g,'<br>');document.getElementById('message').textContent='答えを選んでください。';document.getElementById('message').className='';const choices=document.getElementById('choices');choices.innerHTML='';makeChoices(item.answer).forEach(choice=>{const b=document.createElement('button');b.className='choice';b.textContent=choice;b.onclick=()=>checkAnswer(b,choice);choices.appendChild(b);});updateStats();}
+function checkAnswer(btn,choice){if(answered)return;answered=true;const item=queue[idx];document.querySelectorAll('.choice').forEach(b=>{if(b.textContent===item.answer)b.classList.add('correct');b.disabled=true;});const msg=document.getElementById('message');if(choice===item.answer){score++;msg.textContent='正解！ '+item.answer+' / '+item.note;msg.className='good';wrongNos=wrongNos.filter(n=>n!==item.no);}else{wrongThisRound++;btn.classList.add('wrong');msg.textContent='残念。正解は「'+item.answer+'」です。 '+item.note;msg.className='bad';if(!wrongNos.includes(item.no))wrongNos.push(item.no);}localStorage.setItem('AmericasAgricultureWrongNos',JSON.stringify(wrongNos));updateStats();renderReview();}
+function showAnswer(){if(queue.length===0)return;answered=true;const item=queue[idx];document.querySelectorAll('.choice').forEach(b=>{if(b.textContent===item.answer)b.classList.add('correct');b.disabled=true;});const msg=document.getElementById('message');msg.textContent='答え：'+item.answer+' / '+item.note;msg.className='info';}
+function nextQuestion(){if(queue.length===0){startQuiz('all','sequential');return;}idx++;if(idx>=queue.length)finishQuiz();else renderQuestion();}
+function finishQuiz(){document.getElementById('question').textContent='終了！';document.getElementById('choices').innerHTML='';let text='おつかれさま！ 正解 '+score+' / '+queue.length+' 問でした。';if(wrongNos.length===0){text+=' 復習リストは空です。';celebrate();}else{text+=' 間違えた問題だけで復習できます。';}document.getElementById('message').textContent=text;document.getElementById('message').className=wrongNos.length===0?'good':'info';updateStats();renderReview();}
+function updateStats(){const total=queue.length||DATA.length;const now=queue.length?Math.min(idx+1,total):0;document.getElementById('progressChip').textContent='進み具合：'+now+' / '+total;document.getElementById('scoreChip').textContent='正解：'+score;document.getElementById('wrongChip').textContent='間違い：'+wrongThisRound+'（復習 '+wrongNos.length+'問）';document.getElementById('reviewSeqBtn').disabled=wrongNos.length===0;document.getElementById('reviewRandBtn').disabled=wrongNos.length===0;}
+function renderReview(){const box=document.getElementById('reviewList');if(wrongNos.length===0){box.innerHTML='<span class="hint">復習リストは空です。</span>';return;}box.innerHTML=wrongNos.sort((a,b)=>a-b).map(no=>{const item=DATA.find(x=>x.no===no);return '<div><b>No.'+item.no+'</b> '+item.answer+' <span class="hint"> '+item.note+'</span></div>';}).join('');}
+function toggleDetails(){const el=document.getElementById('detailsBox');el.style.display=el.style.display==='block'?'none':'block';}
+function resetAll(){if(!confirm('復習記録と今の点数をリセットしますか？'))return;wrongNos=[];localStorage.removeItem('AmericasAgricultureWrongNos');queue=[];idx=0;score=0;wrongThisRound=0;answered=false;document.getElementById('modeLabel').textContent='まだ開始していません';document.getElementById('question').textContent='スタートボタンを押してください。';document.getElementById('choices').innerHTML='';document.getElementById('message').textContent='順番にやるか、ランダムでやるかを選べます。';document.getElementById('message').className='info';updateStats();renderReview();}
+function buildList(){document.getElementById('answerList').innerHTML=DATA.map(item=>'<div><b>No.'+item.no+'</b> '+item.answer+' <span class="hint"> '+item.note+'</span></div>').join('');}
+function celebrate(){const canvas=document.getElementById('confettiCanvas'),ctx=canvas.getContext('2d');canvas.classList.remove('hidden');const dpr=window.devicePixelRatio||1,w=window.innerWidth,h=window.innerHeight;canvas.width=w*dpr;canvas.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);const colors=['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899','#facc15'];const pieces=Array.from({length:220},()=>({x:Math.random()*w,y:-20-Math.random()*h*.3,r:4+Math.random()*8,color:colors[Math.floor(Math.random()*colors.length)],tilt:Math.random()*Math.PI*2,tiltSpeed:.05+Math.random()*.12,vx:-2+Math.random()*4,vy:2+Math.random()*5,rot:Math.random()*Math.PI*2,vr:-.2+Math.random()*.4}));let frame=0;function draw(){ctx.clearRect(0,0,w,h);pieces.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.02;p.tilt+=p.tiltSpeed;p.rot+=p.vr;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.color;ctx.fillRect(-p.r/2,-p.r/2+Math.sin(p.tilt)*2,p.r,p.r*.6);ctx.restore();});frame++;if(frame<320)requestAnimationFrame(draw);else{ctx.clearRect(0,0,w,h);canvas.classList.add('hidden');}}draw();}
+buildList();updateStats();renderReview();
+</script>
+</body>
+</html>

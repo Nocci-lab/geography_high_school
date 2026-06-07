@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アメリカの国土・都市・農業 ゲーム</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#1f2937;--muted:#6b7280;--accent:#2563eb;--ok:#16a34a;--ng:#dc2626;--line:#e5e7eb;--warn:#b45309}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background:#f5f7fb;color:var(--ink);min-height:100vh}
+header{background:linear-gradient(135deg,#065f46,#2563eb);color:white;text-align:center;padding:18px 16px 14px}
+h1{margin:0;font-size:clamp(22px,4vw,34px)} header p{margin:.5rem 0 0;font-size:15px;opacity:.95}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.panel{background:white;border-radius:18px;padding:14px;box-shadow:0 8px 24px rgba(15,23,42,.08);margin-bottom:16px}
+.hint{font-size:14px;color:#64748b;line-height:1.8;margin-top:8px}
+.quizBox{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+.question{font-size:clamp(20px,3.6vw,30px);font-weight:800;line-height:1.6;white-space:pre-line}
+.question .num{display:inline-grid;place-items:center;min-width:72px;height:64px;padding:0 14px;border-radius:999px;background:#fef3c7;color:var(--warn);border:3px solid #f59e0b;margin:0 6px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.chip{background:#eef2ff;color:#3730a3;border-radius:999px;padding:8px 12px;font-weight:700} .chip.warn{background:#fff7ed;color:#c2410c}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+button{border:none;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:16px;transition:.12s transform,.12s background}
+button:active{transform:scale(.98)} .primary{background:var(--accent);color:white} .secondary{background:#e5e7eb;color:#111827} .danger{background:#fee2e2;color:#991b1b} .reviewBtn{background:#fff7ed;color:#9a3412} button:disabled{opacity:.45;cursor:not-allowed}
+#message{min-height:48px;padding:12px 14px;border-radius:14px;font-size:18px;font-weight:800;background:#f1f5f9;margin-top:12px}
+#message.good{background:#dcfce7;color:#166534} #message.bad{background:#fee2e2;color:#991b1b} #message.info{background:#eff6ff;color:#1d4ed8}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:12px}
+.choice{background:#f8fafc;border:2px solid #e5e7eb;color:#111827;min-height:46px}
+.choice:hover{background:#eff6ff;border-color:#93c5fd} .choice.correct{background:#dcfce7;border-color:#22c55e;color:#166534} .choice.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b}
+.detailsBox{display:none;margin-top:12px;padding:12px;border:1px dashed #cbd5e1;border-radius:14px;background:#fafafa}
+.listGrid{columns:2 260px;gap:24px} .listGrid div{break-inside:avoid;padding:4px 0;border-bottom:1px dotted #e5e7eb}
+.subTitle{font-weight:800;margin-bottom:8px} .modeTag{font-weight:800;color:#1d4ed8;margin-left:6px}
+#confettiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999}
+@media(max-width:700px){.quizBox{grid-template-columns:1fr}.stats{justify-content:flex-start}.question .num{min-width:60px;height:54px}.choices{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}}
+</style>
+</head>
+<body>
+<header>
+  <h1>アメリカの国土・都市・農業 ゲーム</h1>
+  <p>画像なしで、アメリカの国土拡大・都市構造・都市問題・農業を復習します。</p>
+</header>
+<main>
+  <section class="panel">
+    <div class="quizBox">
+      <div>
+        <div class="modeTag" id="modeLabel">まだ開始していません</div>
+        <div class="question" id="question">スタートボタンを押してください。</div>
+      </div>
+      <div class="stats">
+        <span class="chip" id="progressChip">進み具合：0 / 36</span>
+        <span class="chip" id="scoreChip">正解：0</span>
+        <span class="chip warn" id="wrongChip">間違い：0（復習 0問）</span>
+      </div>
+    </div>
+
+    <div id="choices" class="choices"></div>
+    <div id="message" class="info">順番にやるか、ランダムでやるかを選べます。</div>
+
+    <div class="controls">
+      <button class="primary" onclick="startQuiz('all','sequential')">順番にスタート</button>
+      <button class="primary" onclick="startQuiz('all','random')">ランダムにスタート</button>
+      <button class="reviewBtn" id="reviewSeqBtn" onclick="startQuiz('wrong','sequential')" disabled>間違えた問題だけ・順番</button>
+      <button class="reviewBtn" id="reviewRandBtn" onclick="startQuiz('wrong','random')" disabled>間違えた問題だけ・ランダム</button>
+      <button class="secondary" onclick="showAnswer()">答えを見る</button>
+      <button class="secondary" onclick="nextQuestion()">次へ</button>
+      <button class="secondary" onclick="shuffleCurrent()">今の問題をシャッフル</button>
+      <button class="secondary" onclick="toggleDetails()">答え一覧</button>
+      <button class="danger" onclick="resetAll()">記録リセット</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="subTitle">復習リスト</div>
+    <div id="reviewList"></div>
+  </section>
+
+  <section id="detailsBox" class="detailsBox">
+    <div class="subTitle">答え一覧</div>
+    <div class="listGrid" id="answerList"></div>
+  </section>
+</main>
+<canvas id="confettiCanvas" class="hidden"></canvas>
+<script>
+const DATA = [{"no":1,"answer":"世界第3位","q":"【アメリカの国土】\nアメリカ合衆国の国土面積は世界で何位？","note":"アメリカは世界第3位の面積をもつ大国。"},{"no":2,"answer":"人口密度が低い","q":"【アメリカの国土】\nアメリカは国全体で見ると、人口密度は高い？低い？","note":"国土が広いため、国全体の人口密度は低い。"},{"no":3,"answer":"農地","q":"【アメリカの土地利用】\nアメリカ合衆国で主な土地利用になっているものは？","note":"広い国土を利用した農地が多い。"},{"no":4,"answer":"1776年","q":"【アメリカの国土の拡大】\nアメリカ独立宣言が出された年は？","note":"1776年。独立宣言時は東部13州。"},{"no":5,"answer":"13州","q":"【アメリカの国土の拡大】\n1776年の独立宣言時、アメリカは東部何州だった？","note":"独立宣言時は東部13州。"},{"no":6,"answer":"1912年","q":"【アメリカの国土の拡大】\nアメリカ本土が48州になった年は？","note":"1912年にアメリカ本土で48州に。"},{"no":7,"answer":"48州","q":"【アメリカの国土の拡大】\n1912年にアメリカ本土は何州になった？","note":"アメリカ本土で48州。"},{"no":8,"answer":"1959年","q":"【アメリカの国土の拡大】\nアラスカとハワイが州に昇格した年は？","note":"1959年にアラスカとハワイが州に昇格。"},{"no":9,"answer":"50州","q":"【アメリカの国土の拡大】\nアラスカとハワイが加わり、アメリカは合計何州になった？","note":"現在は50州。"},{"no":10,"answer":"ボストン","q":"【東部の都市】\n大西洋沿岸の北東部にある主要都市。①に入る都市名は？","note":"北から、ボストン、ニューヨーク、フィラデルフィア、ボルティモア、ワシントンD.C.など。"},{"no":11,"answer":"ニューヨーク","q":"【東部の都市】\nアメリカ最大の都市で、世界の金融の中心地でもある都市は？","note":"ニューヨーク。"},{"no":12,"answer":"フィラデルフィア","q":"【東部の都市】\nニューヨークの南西にある、アメリカ東部の主要都市は？","note":"フィラデルフィア。"},{"no":13,"answer":"ボルティモア","q":"【東部の都市】\nワシントンD.C.の北東にある港湾都市は？","note":"ボルティモア。"},{"no":14,"answer":"ワシントンD.C.","q":"【東部の都市】\nアメリカ合衆国の首都は？","note":"ワシントンD.C.。政治の中心。"},{"no":15,"answer":"リッチモンド","q":"【東部の都市】\nワシントンD.C.より南にある、アメリカ東部の都市は？","note":"リッチモンド。"},{"no":16,"answer":"中心業務地区","q":"【都市構造】\nCBDとも呼ばれ、行政機関や中枢管理機能が集中し、高層ビルが立ち並ぶ地区は？","note":"中心業務地区。英語ではCBD。"},{"no":17,"answer":"CBD","q":"【都市構造】\n中心業務地区をアルファベット3文字で何という？","note":"CBD = Central Business District。"},{"no":18,"answer":"郊外の住宅地","q":"【都市構造】\n一戸建て住宅が続き、住み分けやモータリゼーションが見られる地域は？","note":"郊外の住宅地。"},{"no":19,"answer":"モータリゼーション","q":"【都市構造】\n郊外の住宅地の発達に関係する、自動車中心の生活様式を何という？","note":"モータリゼーション。"},{"no":20,"answer":"大型ショッピングセンター","q":"【都市構造】\n郊外の住宅地では、消費活動の中心として何が発達する？","note":"大型ショッピングセンター。"},{"no":21,"answer":"ゲートコミュニティ","q":"【都市構造】\n富裕層がよく住む、塀や門で囲まれた住宅地区を何という？","note":"ゲートコミュニティ。"},{"no":22,"answer":"インナーシティ","q":"【都市問題】\n都市中心部の空洞化や生活環境の悪化に関わる問題を（　）問題という。","note":"インナーシティ問題。"},{"no":23,"answer":"デトロイト","q":"【都市問題】\nかつての自動車産業の中心都市で、自動車産業の衰退により都市問題が起きた都市は？","note":"デトロイト。"},{"no":24,"answer":"ピッツバーグ","q":"【都市問題】\nかつての鉄鋼業の中心都市で、鉄鋼業の衰退や大気汚染の被害で知られる都市は？","note":"ピッツバーグ。"},{"no":25,"answer":"ブラウンフィールド","q":"【都市再開発】\n工場跡地などを利用する都市再開発を（　）型の都市再開発という。","note":"ブラウンフィールド型の都市再開発。"},{"no":26,"answer":"ハーレム","q":"【都市問題】\nニューヨークのアフリカ系住民が多い地区で、生活環境の悪化や犯罪の多発が問題となった地区は？","note":"ハーレム地区。"},{"no":27,"answer":"ジェントリフィケーション","q":"【都市再開発】\n都市再開発により、環境改善と同時に居住者の階層上昇などが進む現象を何という？","note":"ジェントリフィケーション。"},{"no":28,"answer":"とうもろこし","q":"【農業】\nアメリカは世界有数の農業国で、（　）、大豆、小麦などの世界最大級の輸出国である。","note":"とうもろこし。"},{"no":29,"answer":"大豆","q":"【農業】\nアメリカは、とうもろこし、（　）、小麦などの世界最大級の輸出国である。","note":"大豆。"},{"no":30,"answer":"小麦","q":"【農業】\nアメリカは、とうもろこし、大豆、（　）などの世界最大級の輸出国である。","note":"小麦。"},{"no":31,"answer":"世界の食料庫","q":"【農業】\nアメリカは広大な面積で大規模農業を行い、世界に多くの食料を供給するため何と呼ばれる？","note":"世界の食料庫。"},{"no":32,"answer":"企業的農業","q":"【農業】\n多くの農場が農業関連産業に進出する大企業と契約し、少ない労働力で広大な面積を経営する農業を何という？","note":"企業的農業。"},{"no":33,"answer":"アグリビジネス","q":"【農業】\n農業関連産業に進出する大企業を何という？","note":"アグリビジネス。"},{"no":34,"answer":"センターピボット","q":"【農業設備】\n360度回転する自動散水装置を何という？","note":"センターピボット。"},{"no":35,"answer":"フィードロット","q":"【農業設備】\n肉牛などを集中的に肥育する施設を何という？","note":"フィードロット。"},{"no":36,"answer":"穀物メジャー","q":"【農業関連産業】\n世界の食料供給に大きな影響を及ぼす多国籍企業で、特に穀物を扱う巨大商社を何という？","note":"穀物メジャー。"}];
+const ALL_ANSWERS=DATA.map(x=>x.answer);
+let queue=[],idx=0,score=0,wrongThisRound=0,answered=false,currentMode='all',currentOrder='sequential';
+let wrongNos=JSON.parse(localStorage.getItem('SizeAmericaCitiesWrongNos')||'[]');
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function startQuiz(mode='all',order='sequential'){currentMode=mode;currentOrder=order;const base=mode==='wrong'?DATA.filter(x=>wrongNos.includes(x.no)):DATA;if(base.length===0){alert('復習する問題はまだありません。');return;}queue=order==='random'?shuffle(base):[...base];idx=0;score=0;wrongThisRound=0;answered=false;document.getElementById('modeLabel').textContent=(mode==='wrong'?'復習モード':'全問モード')+' / '+(order==='random'?'ランダム':'順番');renderQuestion();updateStats();renderReview();}
+function shuffleCurrent(){if(queue.length===0){startQuiz('all','random');return;}queue=shuffle(queue);idx=0;score=0;wrongThisRound=0;answered=false;document.getElementById('modeLabel').textContent=(currentMode==='wrong'?'復習モード':'全問モード')+' / シャッフル';renderQuestion();updateStats();}
+function makeChoices(ans){return shuffle([ans,...shuffle(ALL_ANSWERS.filter(a=>a!==ans)).slice(0,5)]);}
+function renderQuestion(){const item=queue[idx];if(!item){finishQuiz();return;}answered=false;document.getElementById('question').innerHTML='No.<span class="num">'+item.no+'</span> '+item.q.replace(/\n/g,'<br>');document.getElementById('message').textContent='答えを選んでください。';document.getElementById('message').className='';const choices=document.getElementById('choices');choices.innerHTML='';makeChoices(item.answer).forEach(choice=>{const b=document.createElement('button');b.className='choice';b.textContent=choice;b.onclick=()=>checkAnswer(b,choice);choices.appendChild(b);});updateStats();}
+function checkAnswer(btn,choice){if(answered)return;answered=true;const item=queue[idx];document.querySelectorAll('.choice').forEach(b=>{if(b.textContent===item.answer)b.classList.add('correct');b.disabled=true;});const msg=document.getElementById('message');if(choice===item.answer){score++;msg.textContent='正解！ '+item.answer+' / '+item.note;msg.className='good';wrongNos=wrongNos.filter(n=>n!==item.no);}else{wrongThisRound++;btn.classList.add('wrong');msg.textContent='残念。正解は「'+item.answer+'」です。 '+item.note;msg.className='bad';if(!wrongNos.includes(item.no))wrongNos.push(item.no);}localStorage.setItem('SizeAmericaCitiesWrongNos',JSON.stringify(wrongNos));updateStats();renderReview();}
+function showAnswer(){if(queue.length===0)return;answered=true;const item=queue[idx];document.querySelectorAll('.choice').forEach(b=>{if(b.textContent===item.answer)b.classList.add('correct');b.disabled=true;});const msg=document.getElementById('message');msg.textContent='答え：'+item.answer+' / '+item.note;msg.className='info';}
+function nextQuestion(){if(queue.length===0){startQuiz('all','sequential');return;}idx++;if(idx>=queue.length)finishQuiz();else renderQuestion();}
+function finishQuiz(){document.getElementById('question').textContent='終了！';document.getElementById('choices').innerHTML='';let text='おつかれさま！ 正解 '+score+' / '+queue.length+' 問でした。';if(wrongNos.length===0){text+=' 復習リストは空です。';celebrate();}else{text+=' 間違えた問題だけで復習できます。';}document.getElementById('message').textContent=text;document.getElementById('message').className=wrongNos.length===0?'good':'info';updateStats();renderReview();}
+function updateStats(){const total=queue.length||DATA.length;const now=queue.length?Math.min(idx+1,total):0;document.getElementById('progressChip').textContent='進み具合：'+now+' / '+total;document.getElementById('scoreChip').textContent='正解：'+score;document.getElementById('wrongChip').textContent='間違い：'+wrongThisRound+'（復習 '+wrongNos.length+'問）';document.getElementById('reviewSeqBtn').disabled=wrongNos.length===0;document.getElementById('reviewRandBtn').disabled=wrongNos.length===0;}
+function renderReview(){const box=document.getElementById('reviewList');if(wrongNos.length===0){box.innerHTML='<span class="hint">復習リストは空です。</span>';return;}box.innerHTML=wrongNos.sort((a,b)=>a-b).map(no=>{const item=DATA.find(x=>x.no===no);return '<div><b>No.'+item.no+'</b> '+item.answer+' <span class="hint"> '+item.note+'</span></div>';}).join('');}
+function toggleDetails(){const el=document.getElementById('detailsBox');el.style.display=el.style.display==='block'?'none':'block';}
+function resetAll(){if(!confirm('復習記録と今の点数をリセットしますか？'))return;wrongNos=[];localStorage.removeItem('SizeAmericaCitiesWrongNos');queue=[];idx=0;score=0;wrongThisRound=0;answered=false;document.getElementById('modeLabel').textContent='まだ開始していません';document.getElementById('question').textContent='スタートボタンを押してください。';document.getElementById('choices').innerHTML='';document.getElementById('message').textContent='順番にやるか、ランダムでやるかを選べます。';document.getElementById('message').className='info';updateStats();renderReview();}
+function buildList(){document.getElementById('answerList').innerHTML=DATA.map(item=>'<div><b>No.'+item.no+'</b> '+item.answer+' <span class="hint"> '+item.note+'</span></div>').join('');}
+function celebrate(){const canvas=document.getElementById('confettiCanvas'),ctx=canvas.getContext('2d');canvas.classList.remove('hidden');const dpr=window.devicePixelRatio||1,w=window.innerWidth,h=window.innerHeight;canvas.width=w*dpr;canvas.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);const colors=['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899','#facc15'];const pieces=Array.from({length:220},()=>({x:Math.random()*w,y:-20-Math.random()*h*.3,r:4+Math.random()*8,color:colors[Math.floor(Math.random()*colors.length)],tilt:Math.random()*Math.PI*2,tiltSpeed:.05+Math.random()*.12,vx:-2+Math.random()*4,vy:2+Math.random()*5,rot:Math.random()*Math.PI*2,vr:-.2+Math.random()*.4}));let frame=0;function draw(){ctx.clearRect(0,0,w,h);pieces.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.02;p.tilt+=p.tiltSpeed;p.rot+=p.vr;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.color;ctx.fillRect(-p.r/2,-p.r/2+Math.sin(p.tilt)*2,p.r,p.r*.6);ctx.restore();});frame++;if(frame<320)requestAnimationFrame(draw);else{ctx.clearRect(0,0,w,h);canvas.classList.add('hidden');}}draw();}
+buildList();updateStats();renderReview();
+</script>
+</body>
+</html>
