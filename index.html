@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>geography_high_school｜地理ゲーム目次</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --purple: #7c3aed;
+      --soft-blue: #eff6ff;
+      --soft-green: #ecfdf5;
+      --soft-purple: #f5f3ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+      background:
+        radial-gradient(circle at top left, #dbeafe 0, transparent 34%),
+        radial-gradient(circle at top right, #dcfce7 0, transparent 28%),
+        var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 34px 16px 24px;
+      text-align: center;
+    }
+
+    .site-label {
+      display: inline-block;
+      background: #ffffffcc;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(26px, 5vw, 42px);
+      letter-spacing: 0.03em;
+    }
+
+    .subtitle {
+      margin: 10px auto 0;
+      max-width: 760px;
+      color: #374151;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    main {
+      width: min(1100px, 94%);
+      margin: 0 auto;
+      padding-bottom: 36px;
+    }
+
+    .notice {
+      background: #ffffffcc;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px 16px;
+      color: #374151;
+      line-height: 1.7;
+      box-shadow: 0 8px 24px rgba(0,0,0,.05);
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 900;
+      margin: 24px 0 12px;
+      padding-left: 10px;
+      border-left: 6px solid var(--blue);
+    }
+
+    .section-title.north {
+      border-left-color: var(--green);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px;
+      min-height: 160px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.06);
+      transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      right: -34px;
+      bottom: -34px;
+      width: 116px;
+      height: 116px;
+      border-radius: 50%;
+      background: var(--soft-blue);
+    }
+
+    .card.north::after { background: var(--soft-green); }
+    .card.map::after { background: var(--soft-purple); }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 32px rgba(0,0,0,.10);
+      border-color: #93c5fd;
+    }
+
+    .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: var(--blue);
+      color: white;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .north .num { background: var(--green); }
+    .map .num { background: var(--purple); }
+
+    .title {
+      font-size: 19px;
+      font-weight: 900;
+      line-height: 1.45;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .desc {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+    }
+
+    .file-name {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #6b7280;
+      background: #f3f4f6;
+      border-radius: 999px;
+      padding: 4px 8px;
+      position: relative;
+      z-index: 1;
+      word-break: break-all;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 18px 10px 30px;
+    }
+
+    @media (max-width: 600px) {
+      header { padding-top: 24px; }
+      .card { min-height: 140px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="site-label">geography_high_school</div>
+    <h1>地理・中間テスト対策</h1>
+    <p class="subtitle">
+      ヨーロッパと北アメリカの復習ゲーム目次です。ボタン表示は日本語、リンク先は Nocci-lab の GitHub Pages URL にしてあります。
+    </p>
+  </header>
+
+  <main>
+    <section class="notice">
+      リンク先は <strong>https://nocci-lab.github.io/geography_high_school/</strong> を使っています。<br>
+      このファイルを <strong>index.html</strong> という名前で、リポジトリの一番上にアップロードしてください。
+    </section>
+
+    <div class="section-title">ヨーロッパ</div>
+    <section class="grid">
+      
+      <a class="card europe" href="https://nocci-lab.github.io/geography_high_school/Europe_countries.html">
+        <div class="num">1</div>
+        <div class="title">ヨーロッパ：国当てゲーム</div>
+        <div class="desc">ヨーロッパの国名を答えるゲーム。</div>
+        <div class="file-name">Europe_countries.html</div>
+      </a>
+      <a class="card europe" href="https://nocci-lab.github.io/geography_high_school/Europe_nature.html">
+        <div class="num">2</div>
+        <div class="title">ヨーロッパ：地形や気候</div>
+        <div class="desc">山脈・川・半島・気候などの復習。</div>
+        <div class="file-name">Europe_nature.html</div>
+      </a>
+      <a class="card map" href="https://nocci-lab.github.io/geography_high_school/Europe_map.pdf">
+        <div class="num">3</div>
+        <div class="title">ヨーロッパの地図（国名入り）</div>
+        <div class="desc">国名入り地図で位置関係を確認。</div>
+        <div class="file-name">Europe_map.pdf</div>
+      </a>
+      <a class="card europe" href="https://nocci-lab.github.io/geography_high_school/europe_history_culture.html">
+        <div class="num">4</div>
+        <div class="title">ヨーロッパ：歴史・文化と宗教</div>
+        <div class="desc">民族・言語・宗教・歴史の重要語句。</div>
+        <div class="file-name">europe_history_culture.html</div>
+      </a>
+      <a class="card europe" href="https://nocci-lab.github.io/geography_high_school/europe_eu_integration_quiz.html">
+        <div class="num">5</div>
+        <div class="title">進むヨーロッパ統合</div>
+        <div class="desc">EC・EU・マーストリヒト条約・EUの組織など。</div>
+        <div class="file-name">europe_eu_integration_quiz.html</div>
+      </a>
+      <a class="card europe" href="https://nocci-lab.github.io/geography_high_school/europe_integration_timeline_quiz.html">
+        <div class="num">6</div>
+        <div class="title">ヨーロッパ統合の歩み・タイムライン</div>
+        <div class="desc">ECSC・EEC・EURATOM・ユーロ導入など。</div>
+        <div class="file-name">europe_integration_timeline_quiz.html</div>
+      </a>
+      <a class="card europe" href="https://nocci-lab.github.io/geography_high_school/eu_connections_issues_quiz.html">
+        <div class="num">7</div>
+        <div class="title">EU加盟国間の結びつき</div>
+        <div class="desc">シェンゲン協定・エラスムス計画・ユーロ・EUの課題。</div>
+        <div class="file-name">eu_connections_issues_quiz.html</div>
+      </a>
+    </section>
+
+    <div class="section-title north">北アメリカ・アメリカ合衆国</div>
+    <section class="grid">
+      
+      <a class="card north" href="https://nocci-lab.github.io/geography_high_school/North_America_quiz_order_random.html">
+        <div class="num">8</div>
+        <div class="title">北アメリカ：小テスト地図ゲーム</div>
+        <div class="desc">都市名・民族分布・農業・国名を地図で確認。</div>
+        <div class="file-name">North_America_quiz_order_random.html</div>
+      </a>
+      <a class="card north" href="https://nocci-lab.github.io/geography_high_school/NorthAmerica_Nature.html">
+        <div class="num">9</div>
+        <div class="title">北アメリカ：自然環境</div>
+        <div class="desc">北極海・太平洋・五大湖・ロッキー山脈など。</div>
+        <div class="file-name">NorthAmerica_Nature.html</div>
+      </a>
+      <a class="card map" href="https://nocci-lab.github.io/geography_high_school/NorthAmerica_Nature_Map_This_One.pdf">
+        <div class="num">10</div>
+        <div class="title">北アメリカ：自然環境の地図</div>
+        <div class="desc">自然環境の地図PDF。</div>
+        <div class="file-name">NorthAmerica_Nature_Map_This_One.pdf</div>
+      </a>
+      <a class="card north" href="https://nocci-lab.github.io/geography_high_school/About_NorthAmerica.html">
+        <div class="num">11</div>
+        <div class="title">北アメリカ：要点まとめ</div>
+        <div class="desc">北アメリカの概観・地形・国境・気候。</div>
+        <div class="file-name">About_NorthAmerica.html</div>
+      </a>
+      <a class="card north" href="https://nocci-lab.github.io/geography_high_school/Countries_Around_NorthAmerica_no_image.html">
+        <div class="num">12</div>
+        <div class="title">アメリカ合衆国の周辺国</div>
+        <div class="desc">カナダ・メキシコ・キューバ・パナマなど。</div>
+        <div class="file-name">Countries_Around_NorthAmerica_no_image.html</div>
+      </a>
+      <a class="card north" href="https://nocci-lab.github.io/geography_high_school/Features_of_America_and_ethnicity.html">
+        <div class="num">13</div>
+        <div class="title">アメリカ合衆国の特徴と民族</div>
+        <div class="desc">アメリカの特徴・気候・多民族社会・民族分布。</div>
+        <div class="file-name">Features_of_America_and_ethnicity.html</div>
+      </a>
+      <a class="card north" href="https://nocci-lab.github.io/geography_high_school/Size_Of_America_and_the_Cities.html">
+        <div class="num">14</div>
+        <div class="title">アメリカの国土・都市・農業</div>
+        <div class="desc">国土拡大・都市構造・都市問題・農業。</div>
+        <div class="file-name">Size_Of_America_and_the_Cities.html</div>
+      </a>
+      <a class="card north" href="https://nocci-lab.github.io/geography_high_school/Americas_Agriculture.html">
+        <div class="num">15</div>
+        <div class="title">アメリカの農業</div>
+        <div class="desc">適地適作・農業地帯・農業設備・農業地域。</div>
+        <div class="file-name">Americas_Agriculture.html</div>
+      </a>
+      <a class="card north" href="https://nocci-lab.github.io/geography_high_school/Americas_Mining_Industry_and_other_Industries.html">
+        <div class="num">16</div>
+        <div class="title">アメリカの鉱工業とその他の工業</div>
+        <div class="desc">鉱産資源・工業地域の変化・主要工業都市。</div>
+        <div class="file-name">Americas_Mining_Industry_and_other_Industries.html</div>
+      </a>
+    </section>
+  </main>
+
+  <footer>
+    © geography_high_school｜中間テスト対策
+  </footer>
+</body>
+</html>
